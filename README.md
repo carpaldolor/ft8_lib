@@ -1,3 +1,10 @@
+#This is a fork of 
+https://github.com/kgoba/ft8_lib by Karlis Goba (YL3JG)
+
+
+
+
+
 # FT8 (and now FT4) library 
 
 C implementation of a lightweight FT8/FT4 decoder and encoder, mostly intended for experimental use on microcontrollers.
