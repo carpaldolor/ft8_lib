@@ -1,8 +1,12 @@
-#This is a fork of 
-https://github.com/kgoba/ft8_lib by Karlis Goba (YL3JG)
+#This is a fork of https://github.com/kgoba/ft8_lib by Karlis Goba (YL3JG)
 
+Added stream_ftp for realtime decoding of FT8 from 
 
+Example streaming from a RSP1 SDR on the 20m band
+#miri_fm  -f14074000 -Musb  -g6  -s48000 -w 5000000  -m336  - | stream_ft8
 
+Example streaming from a RTL_SDR on the 10m band
+rtl_fm -f 28074000 -s 12000 -g 65 -M usb -l 20 -p 22 - | stream_ft8
 
 
 # FT8 (and now FT4) library 
