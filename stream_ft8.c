@@ -6,6 +6,8 @@
 #include <sys/time.h>
 #include <time.h>
 #include <errno.h>    
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include "ft8/unpack.h"
 #include "ft8/ldpc.h"
@@ -42,7 +44,7 @@ long long timeInMilliseconds(void) {
 
 void usage()
 {
-    fprintf(stderr, "./stream_ft8  -g[in ms]\n-g is interval gap in ms.  default=1000\n");
+    fprintf(stderr, "./stream_ft8  -g<in ms> -h<udp ip address> -p<udp port>\n-g is interval gap in ms.  default=1000 for interval 14s\n");
 }
 
 static float hann_i(int i, int N)
@@ -243,6 +245,15 @@ int main(int argc, char** argv)
     const char* wav_path = "-";
     bool is_ft8 = true;
     int gap = 1000 ;
+    double freq = 0.0;
+
+    int port = 14074;
+    char hostname[32] ;    
+    hostname[0]=0;
+    int socket_desc;
+    struct sockaddr_in server_addr;
+    char udp_message[2000];
+    int server_struct_length = sizeof(server_addr);
 
     // Parse arguments one by one
     int arg_idx = 1;
@@ -255,7 +266,19 @@ int main(int argc, char** argv)
             //if (0 == strcmp(argv[arg_idx], "-ft4"))
             if(argv[arg_idx][1] == 'g')
             {
-                gap = atoi(&argv[arg_idx][2]) ; 
+                gap = atoi(&argv[arg_idx][2]) ;             
+            }
+            else if(argv[arg_idx][1] == 'p') 
+            {
+                port = atoi(&argv[arg_idx][2]) ; 
+            }
+            else if(argv[arg_idx][1] == 'f') 
+            {
+                freq = atof(&argv[arg_idx][2]) ; 
+            }
+            else if(argv[arg_idx][1] == 'h') 
+            {
+                strcpy(hostname,&argv[arg_idx][2]) ; 
             }
             else
             {
@@ -272,6 +295,19 @@ int main(int argc, char** argv)
         }
         ++arg_idx;
     }
+
+    if(hostname!=0) {
+        fprintf(stderr,"UDP output to: %s:%d\n",hostname,port) ;          
+        socket_desc = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        if(socket_desc < 0){
+            printf("Error while creating socket\n");
+            return -1;
+        }
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(port);
+        server_addr.sin_addr.s_addr = inet_addr(hostname);        
+    }
+
 
     int sample_rate = 24000; //24K
     int num_samples = (15000-gap)/1000 * sample_rate;
@@ -422,13 +458,21 @@ int main(int argc, char** argv)
                 time(&tmi);
                 utcTime = gmtime(&tmi);
 
-                fprintf(stdout,"%02d%02d%02d_%02d%02d%02d",
+                sprintf(udp_message,"%02d%02d%02d_%02d%02d%02d    %00.3f Rx %s   %+3d %+4.1f %4.0f %s",
                  (utcTime->tm_year)%100,utcTime->tm_mon+1,utcTime->tm_mday,
-                    (utcTime->tm_hour) % 24,utcTime->tm_min, (utcTime->tm_sec/15*15)) ;
+                    (utcTime->tm_hour) % 24,utcTime->tm_min, (utcTime->tm_sec/15*15),
+                    freq, mode, cand->score, time_sec, freq_hz, message.text);
 
-                // Fake WSJT-X-like output for now
-                int snr = 0; // TODO: compute SNR
-                fprintf(stdout,"    00.000 Rx %s   %+3d %+4.1f %4.0f %s\n", mode, cand->score, time_sec, freq_hz, message.text);
+                fprintf(stdout,"%s\n", udp_message);
+
+                if(hostname!=0) {
+                    sendto(socket_desc, udp_message, strlen(udp_message), 0,
+                     (struct sockaddr*)&server_addr, server_struct_length) ;
+                }
+
+                //fprintf(stdout,"%02d%02d%02d_%02d%02d%02d",(utcTime->tm_year)%100,utcTime->tm_mon+1,utcTime->tm_mday,(utcTime->tm_hour) % 24,utcTime->tm_min, (utcTime->tm_sec/15*15)) ;
+                //int snr = 0; // TODO: compute SNR
+                //fprintf(stdout,"    00.000 Rx %s   %+3d %+4.1f %4.0f %s\n", mode, cand->score, time_sec, freq_hz, message.text);
             }
         }
         fflush(stdout);
