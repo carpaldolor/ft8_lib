@@ -42,7 +42,7 @@ long long timeInMilliseconds(void) {
 
 void usage()
 {
-    fprintf(stderr, "Decode a 15-second (or slighly shorter) WAV file.\n");
+    fprintf(stderr, "./stream_ft8  -g[in ms]\n-g is interval gap in ms.  default=1000\n");
 }
 
 static float hann_i(int i, int N)
@@ -242,6 +242,7 @@ int main(int argc, char** argv)
     const char* mode = "FT8";
     const char* wav_path = "-";
     bool is_ft8 = true;
+    int gap = 1000 ;
 
     // Parse arguments one by one
     int arg_idx = 1;
@@ -251,10 +252,10 @@ int main(int argc, char** argv)
         if (argv[arg_idx][0] == '-')
         {
             // Check agaist valid options
-            if (0 == strcmp(argv[arg_idx], "-ft4"))
+            //if (0 == strcmp(argv[arg_idx], "-ft4"))
+            if(argv[arg_idx][1] == 'g')
             {
-                is_ft8 = false;
-                mode ="FT4";
+                gap = atoi(&argv[arg_idx][2]) ; 
             }
             else
             {
@@ -272,8 +273,10 @@ int main(int argc, char** argv)
         ++arg_idx;
     }
 
-    int sample_rate = 24000;
-    int num_samples = 14 * sample_rate;
+    int sample_rate = 24000; //24K
+    int num_samples = (15000-gap)/1000 * sample_rate;
+
+    fprintf(stderr,"Setting gap:  %d, Total Duration(ms): %d    Num Samples: %d\n", gap, (15000-gap), num_samples)  ;                
     float signal[num_samples];
 
 
