@@ -2,7 +2,7 @@ CFLAGS = -O3 -ggdb3 -fsanitize=address
 CPPFLAGS = -std=c11 -I.
 LDFLAGS = -lm -fsanitize=address
 
-TARGETS = gen_ft8 decode_ft8 test
+TARGETS = gen_ft8 decode_ft8 test stream_ft8
 
 .PHONY: run_tests all clean
 
@@ -18,6 +18,8 @@ test:  test.o ft8/pack.o ft8/encode.o ft8/crc.o ft8/text.o ft8/constants.o fft/k
 	$(CXX) $(LDFLAGS) -o $@ $^
 
 decode_ft8: decode_ft8.o fft/kiss_fftr.o fft/kiss_fft.o ft8/decode.o ft8/encode.o ft8/crc.o ft8/ldpc.o ft8/unpack.o ft8/text.o ft8/constants.o common/wave.o
+
+stream_ft8: stream_ft8.o fft/kiss_fftr.o fft/kiss_fft.o ft8/decode.o ft8/encode.o ft8/crc.o ft8/ldpc.o ft8/unpack.o ft8/text.o ft8/constants.o common/wave.o
 	$(CXX) $(LDFLAGS) -o $@ $^
 
 clean:

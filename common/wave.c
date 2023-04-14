@@ -81,36 +81,49 @@ int load_wav(float* signal, int* num_samples, int* sample_rate, const char* path
     uint32_t chunkSize; // = 4 + (8 + subChunk1Size) + (8 + subChunk2Size);
     char format[4]; // = {'W', 'A', 'V', 'E'};
 
-    FILE* f = fopen(path, "rb");
+    int hasHeader=1;
+    FILE* f ;
+    if ((0 == strcmp(path, "-"))) {
+        f = stdin ;
+        hasHeader=0;
+    } else {
+        f = fopen(path, "rb");
+    }
 
-    // NOTE: works only on little-endian architecture
-    fread((void*)chunkID, sizeof(chunkID), 1, f);
-    fread((void*)&chunkSize, sizeof(chunkSize), 1, f);
-    fread((void*)format, sizeof(format), 1, f);
 
-    fread((void*)subChunk1ID, sizeof(subChunk1ID), 1, f);
-    fread((void*)&subChunk1Size, sizeof(subChunk1Size), 1, f);
-    if (subChunk1Size != 16)
-        return -1;
+    if(hasHeader) {
+        // NOTE: works only on little-endian architecture
+        fread((void*)chunkID, sizeof(chunkID), 1, f);
+        fread((void*)&chunkSize, sizeof(chunkSize), 1, f);
+        fread((void*)format, sizeof(format), 1, f);
 
-    fread((void*)&audioFormat, sizeof(audioFormat), 1, f);
-    fread((void*)&numChannels, sizeof(numChannels), 1, f);
-    fread((void*)&sampleRate, sizeof(sampleRate), 1, f);
-    fread((void*)&byteRate, sizeof(byteRate), 1, f);
-    fread((void*)&blockAlign, sizeof(blockAlign), 1, f);
-    fread((void*)&bitsPerSample, sizeof(bitsPerSample), 1, f);
+        fread((void*)subChunk1ID, sizeof(subChunk1ID), 1, f);
+        fread((void*)&subChunk1Size, sizeof(subChunk1Size), 1, f);
+        if (subChunk1Size != 16)
+            return -1;
 
-    if (audioFormat != 1 || numChannels != 1 || bitsPerSample != 16)
-        return -1;
+        fread((void*)&audioFormat, sizeof(audioFormat), 1, f);
+        fread((void*)&numChannels, sizeof(numChannels), 1, f);
+        fread((void*)&sampleRate, sizeof(sampleRate), 1, f);
+        fread((void*)&byteRate, sizeof(byteRate), 1, f);
+        fread((void*)&blockAlign, sizeof(blockAlign), 1, f);
+        fread((void*)&bitsPerSample, sizeof(bitsPerSample), 1, f);
 
-    fread((void*)subChunk2ID, sizeof(subChunk2ID), 1, f);
-    fread((void*)&subChunk2Size, sizeof(subChunk2Size), 1, f);
+        if (audioFormat != 1 || numChannels != 1 || bitsPerSample != 16)
+            return -1;
 
-    if (subChunk2Size / blockAlign > *num_samples)
-        return -2;
+        fread((void*)subChunk2ID, sizeof(subChunk2ID), 1, f);
+        fread((void*)&subChunk2Size, sizeof(subChunk2Size), 1, f);
 
-    *num_samples = subChunk2Size / blockAlign;
-    *sample_rate = sampleRate;
+        if (subChunk2Size / blockAlign > *num_samples)
+            return -2;
+
+        *num_samples = subChunk2Size / blockAlign;
+        *sample_rate = sampleRate;
+    } else {
+        blockAlign=2;
+    }
+
 
     int16_t* raw_data = (int16_t*)malloc(*num_samples * blockAlign);
 
@@ -121,8 +134,10 @@ int load_wav(float* signal, int* num_samples, int* sample_rate, const char* path
     }
 
     free(raw_data);
+    if(hasHeader) {
+        fclose(f);
+    }
 
-    fclose(f);
 
     return 0;
 }
