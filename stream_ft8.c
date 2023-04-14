@@ -458,12 +458,12 @@ int main(int argc, char** argv)
                 time(&tmi);
                 utcTime = gmtime(&tmi);
 
-                sprintf(udp_message,"%02d%02d%02d_%02d%02d%02d    %00.3f Rx %s   %+3d %+4.1f %4.0f %s",
+                sprintf(udp_message,"%02d%02d%02d_%02d%02d%02d    %00.3f Rx %s   %+3d %+4.1f %4.0f %s\n",
                  (utcTime->tm_year)%100,utcTime->tm_mon+1,utcTime->tm_mday,
                     (utcTime->tm_hour) % 24,utcTime->tm_min, (utcTime->tm_sec/15*15),
                     freq, mode, cand->score, time_sec, freq_hz, message.text);
 
-                fprintf(stdout,"%s\n", udp_message);
+                fprintf(stdout,"%s", udp_message);
 
                 if(hostname!=0) {
                     sendto(socket_desc, udp_message, strlen(udp_message), 0,
