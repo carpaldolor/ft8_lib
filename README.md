@@ -6,13 +6,13 @@ Live streaming from a RSP1 SDR on the 20m band
 
 Example
 
-miri_fm  -f14074000 -Musb  -g6  -s48000 -w 5000000  -m336  - | stream_ft8
+miri_fm  -f14074000 -Musb  -g6  -s24000 -w 5000000  -m336  - | stream_ft8
 
 Live streaming from a RTL_SDR on the 10m band
 
 Example
 
-rtl_fm -f28074000 -s48000 -g65 -Musb -l20 -p22 - | stream_ft8
+rtl_fm -f28074000 -s24000 -g65 -Musb -l20 -p22 - | stream_ft8
 
 Sample output
 

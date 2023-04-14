@@ -272,7 +272,7 @@ int main(int argc, char** argv)
         ++arg_idx;
     }
 
-    int sample_rate = 48000;
+    int sample_rate = 24000;
     int num_samples = 14 * sample_rate;
     float signal[num_samples];
 
